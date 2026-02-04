@@ -1,0 +1,313 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<style>
+    /* Ensure dashboard elements use the variables from base.html */
+    .dashboard-card {
+        background-color: var(--bg-card);
+        border: 1px solid var(--border-color);
+        color: var(--text-main);
+    }
+    
+    /* Funding Source Item Background */
+    .funding-item {
+        background: var(--bg-body); /* Adaptive background */
+        border: 1px solid var(--border-color) !important;
+        color: var(--text-main);
+    }
+
+    /* Table Adjustments */
+    .table {
+        color: var(--text-main);
+        --bs-table-bg: transparent;
+        --bs-table-hover-color: var(--text-main);
+        --bs-table-hover-bg: rgba(255,255,255,0.05);
+    }
+    
+    .table thead th {
+        color: var(--text-muted);
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        border-bottom: 2px solid var(--border-color);
+    }
+
+    .table td {
+        border-bottom: 1px solid var(--border-color);
+        padding: 1rem 0.5rem;
+    }
+
+    /* Quick Action Buttons */
+    .btn-quick-action {
+        background-color: var(--bg-card);
+        border: 1px solid var(--border-color);
+        color: var(--text-main);
+        transition: all 0.3s ease;
+    }
+    .btn-quick-action:hover {
+        background-color: var(--primary);
+        color: white !important;
+        border-color: var(--primary);
+        transform: translateY(-3px);
+    }
+    .btn-quick-action:hover i { color: white !important; }
+</style>
+
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+    <div>
+        <h4 class="fw-bold mb-1">Financial Overview</h4>
+        <p class="text-muted mb-0">Track your active deposits and funding sources.</p>
+    </div>
+    <button class="btn btn-primary btn-lg fw-bold shadow-sm d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#investModal">
+        <i class="fas fa-chart-line"></i> Open New Deposit
+    </button>
+</div>
+
+<div class="row g-4">
+    
+    <div class="col-lg-8">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-header bg-transparent py-3 border-bottom border-secondary border-opacity-10">
+                <h5 class="fw-bold mb-0"><i class="fas fa-piggy-bank me-2 text-primary"></i>My Active Investments</h5>
+            </div>
+            <div class="card-body p-0">
+                {% if deposits %}
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead class="bg-transparent">
+                            <tr>
+                                <th class="ps-4">Details</th>
+                                <th>Rate</th>
+                                <th>Invested</th>
+                                <th>Projected</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for d in deposits %}
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="fw-bold">{{ d.term_months }} Months Term</div>
+                                    <small class="text-muted">
+                                        {{ 'Monthly Payout' if d.is_monthly_payout else 'End of Term Payout' }}
+                                    </small>
+                                </td>
+                                <td><span class="badge bg-success-subtle text-success border border-success">{{ d.interest_rate }}%</span></td>
+                                <td class="fw-bold">{{ d.amount }} {{ d.currency }}</td>
+                                <td class="fw-bold text-success">+{{ "%.2f"|format(d.projected_profit) }} {{ d.currency }}</td>
+                                <td><span class="badge bg-primary">ACTIVE</span></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <div class="mb-3">
+                        <i class="fas fa-search-dollar fa-3x text-muted opacity-50"></i>
+                    </div>
+                    <h5 class="text-muted">No active investments.</h5>
+                    <p class="small text-muted">Start earning up to 11% APY today.</p>
+                    <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#investModal">Start Investing</button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-transparent py-3 border-bottom border-secondary border-opacity-10">
+                <h6 class="fw-bold mb-0">Funding Sources (My Cards)</h6>
+            </div>
+            <div class="card-body">
+                {% for card in cards %}
+                <div class="d-flex justify-content-between align-items-center mb-3 p-3 rounded funding-item">
+                    <div>
+                        <div class="fw-bold">{{ card.card_type }} ****{{ card.card_number[-4:] }}</div>
+                        <small class="text-muted">{{ card.currency }} Wallet</small>
+                    </div>
+                    <div class="text-end">
+                        <h6 class="mb-0 fw-bold">{{ card.balance }} {{ card.currency }}</h6>
+                    </div>
+                </div>
+                {% endfor %}
+                
+                <a href="{{ url_for('cards') }}" class="btn btn-outline-secondary w-100 btn-sm">Manage Cards</a>
+            </div>
+        </div>
+
+        <div class="card bg-dark text-white border-0 shadow-lg overflow-hidden position-relative">
+            <div class="card-body p-4 text-center position-relative z-1">
+                <i class="fas fa-percentage fa-3x mb-3 text-info"></i>
+                <h4>Maximize Returns</h4>
+                <p class="small opacity-75">Get up to 11% yearly on AZN deposits. Secure your future with NEXO.</p>
+            </div>
+            <div class="position-absolute top-0 start-0 w-100 h-100" style="background: linear-gradient(135deg, rgba(79, 172, 254, 0.2), rgba(0, 242, 254, 0.1)); pointer-events: none;"></div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mt-2 mb-4">
+    <div class="col-6 col-md-3">
+        <a href="{{ url_for('transfer') }}" class="btn btn-quick-action w-100 py-4 h-100 d-flex flex-column align-items-center justify-content-center gap-2 rounded-3">
+            <i class="fas fa-paper-plane fa-2x text-primary"></i>
+            <span class="small fw-bold">Transfer</span>
+        </a>
+    </div>
+
+    <div class="col-6 col-md-3">
+        <a href="{{ url_for('cards') }}" class="btn btn-quick-action w-100 py-4 h-100 d-flex flex-column align-items-center justify-content-center gap-2 rounded-3">
+            <i class="fas fa-credit-card fa-2x text-danger"></i>
+            <span class="small fw-bold">Cards</span>
+        </a>
+    </div>
+
+    <div class="col-6 col-md-3">
+        <a href="{{ url_for('exchange') }}" class="btn btn-quick-action w-100 py-4 h-100 d-flex flex-column align-items-center justify-content-center gap-2 rounded-3">
+            <i class="fas fa-sync-alt fa-2x text-warning"></i>
+            <span class="small fw-bold">Exchange</span>
+        </a>
+    </div>
+
+    <div class="col-6 col-md-3">
+        <a href="{{ url_for('history') }}" class="btn btn-quick-action w-100 py-4 h-100 d-flex flex-column align-items-center justify-content-center gap-2 rounded-3">
+            <i class="fas fa-history fa-2x text-success"></i>
+            <span class="small fw-bold">History</span>
+        </a>
+    </div>
+</div>
+
+<div class="modal fade" id="investModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold"><i class="fas fa-calculator me-2"></i>Open Term Deposit</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form action="{{ url_for('create_deposit') }}" method="POST" id="investForm">
+                    <div class="row g-4">
+                        <div class="col-md-6 border-end border-secondary border-opacity-10">
+                            <label class="form-label fw-bold text-muted small">SOURCE CARD (FUNDING)</label>
+                            <select name="source_card" id="sourceCard" class="form-select mb-3" onchange="updateCalculator()">
+                                {% for card in cards %}
+                                <option value="{{ card.card_number }}" data-currency="{{ card.currency }}" data-balance="{{ card.balance }}">
+                                    {{ card.currency }} - ****{{ card.card_number[-4:] }} (Bal: {{ card.balance }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <input type="hidden" name="currency" id="hiddenCurrency">
+
+                            <label class="form-label fw-bold text-muted small">DEPOSIT AMOUNT</label>
+                            <input type="number" name="amount" id="amountInput" class="form-control mb-3" placeholder="Min 200 - Max 500,000" min="200" max="500000" onkeyup="updateCalculator()" required>
+
+                            <label class="form-label fw-bold text-muted small">DURATION (MONTHS)</label>
+                            <select name="term_months" id="termInput" class="form-select mb-3" onchange="updateCalculator()">
+                            </select>
+
+                            <label class="form-label fw-bold text-muted small">PAYOUT TYPE</label>
+                            <select name="payout_type" id="payoutType" class="form-select mb-3" onchange="updateCalculator()">
+                                <option value="end">End of Term (Full Rate)</option>
+                                <option value="monthly">Monthly (-0.5% Rate)</option>
+                            </select>
+                            
+                            <label class="form-label fw-bold text-muted small">RECEIVE PROFIT TO</label>
+                            <select name="payout_card" class="form-select">
+                                {% for card in cards %}
+                                <option value="{{ card.card_number }}">{{ card.card_type }} ****{{ card.card_number[-4:] }} ({{ card.currency }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-6 d-flex flex-column justify-content-center">
+                            <div class="p-4 rounded text-center mb-3" style="background-color: var(--bg-body); border: 1px solid var(--border-color);">
+                                <h6 class="text-muted mb-3">Estimated Return</h6>
+                                <h1 class="fw-bold text-success mb-0" id="profitDisplay">0.00</h1>
+                                <span id="currencyDisplay" class="fw-bold text-success">AZN</span>
+                                
+                                <hr class="my-3 border-secondary opacity-25">
+                                
+                                <div class="d-flex justify-content-between mb-2 small text-muted">
+                                    <span>Interest Rate:</span>
+                                    <span class="fw-bold text-main" id="rateDisplay">0.0%</span>
+                                </div>
+                                <div class="d-flex justify-content-between small text-muted">
+                                    <span>Total Payout:</span>
+                                    <span class="fw-bold text-main" id="totalDisplay">0.00</span>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-lg fw-bold w-100 shadow-sm">
+                                Confirm & Invest <i class="fas fa-check-circle ms-2"></i>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- RATES DEFINITION ---
+    const RATES = {
+        'AZN': {6: 8.0, 9: 9.0, 12: 11.0, 18: 10.0, 24: 10.5},
+        'USD': {12: 3.0, 24: 3.5},
+        'EUR': {18: 3.5}
+    };
+
+    document.addEventListener("DOMContentLoaded", function() { 
+        updateCalculator(); 
+    });
+
+    function updateCalculator() {
+        // 1. Get Elements
+        const sourceSelect = document.getElementById('sourceCard');
+        const termSelect = document.getElementById('termInput');
+        const selectedOption = sourceSelect.options[sourceSelect.selectedIndex];
+        
+        // Safety check if no cards exist
+        if(!selectedOption) return;
+
+        const currency = selectedOption.getAttribute('data-currency');
+        document.getElementById('hiddenCurrency').value = currency;
+        document.getElementById('currencyDisplay').innerText = currency;
+
+        // 2. Populate Terms based on Currency
+        const currentTermVal = termSelect.value;
+        const availableTerms = Object.keys(RATES[currency] || {});
+        
+        termSelect.innerHTML = ""; 
+        availableTerms.forEach(term => {
+            let opt = document.createElement('option');
+            opt.value = term;
+            opt.innerText = `${term} Months (${RATES[currency][term]}%)`;
+            if(term == currentTermVal) opt.selected = true;
+            termSelect.appendChild(opt);
+        });
+        if(termSelect.value === "") termSelect.selectedIndex = 0;
+
+        // 3. Calculation
+        const amount = parseFloat(document.getElementById('amountInput').value) || 0;
+        const months = parseInt(termSelect.value) || 0;
+        const type = document.getElementById('payoutType').value;
+
+        let baseRate = (RATES[currency] && RATES[currency][months]) ? RATES[currency][months] : 0;
+        
+        // Apply Penalty
+        if (type === 'monthly') baseRate -= 0.5;
+
+        // Calculate Profit
+        let profit = amount * (baseRate / 100) * (months / 12);
+        let total = amount + profit;
+
+        // 4. Update UI
+        document.getElementById('rateDisplay').innerText = baseRate.toFixed(2) + "%";
+        document.getElementById('profitDisplay').innerText = "+" + profit.toFixed(2);
+        document.getElementById('totalDisplay').innerText = total.toFixed(2) + " " + currency;
+    }
+</script>
+
+{% endblock %}

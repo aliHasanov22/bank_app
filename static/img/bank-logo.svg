@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 220" fill="none">
+  <!-- Transparent background by default -->
+
+  <!-- ===== ICON (geometric N) ===== -->
+  <g transform="translate(20,20)">
+    <!-- Left block -->
+    <path
+      d="M20 30 L120 0 L120 40 L60 60 L60 150 L20 170 Z"
+      fill="#ffffff" opacity="0.98"
+    />
+    <!-- Right block -->
+    <path
+      d="M140 0 L220 30 L220 170 L180 150 L180 60 L140 40 Z"
+      fill="#ffffff" opacity="0.98"
+    />
+    <!-- Middle diagonal bridge -->
+    <path
+      d="M60 60 L120 40 L180 60 L120 80 Z"
+      fill="#ffffff" opacity="0.92"
+    />
+    <!-- Bottom diagonal bridge -->
+    <path
+      d="M60 150 L120 170 L180 150 L120 130 Z"
+      fill="#ffffff" opacity="0.92"
+    />
+  </g>
+
+  <!-- ===== WORDMARK ===== -->
+  <g transform="translate(280,55)" fill="#ffffff">
+    <!-- NEXO -->
+    <text x="0" y="70"
+          font-family="Inter, Arial, sans-serif"
+          font-size="86"
+          font-weight="800"
+          letter-spacing="2">
+      NEXO
+    </text>
+
+    <!-- BANK + lines -->
+    <g transform="translate(0,95)">
+      <rect x="0" y="30" width="170" height="4" rx="2" fill="#ffffff" opacity="0.9"/>
+      <text x="200" y="45"
+            font-family="Inter, Arial, sans-serif"
+            font-size="42"
+            font-weight="700"
+            letter-spacing="6"
+            opacity="0.95">
+        BANK
+      </text>
+      <rect x="390" y="30" width="170" height="4" rx="2" fill="#ffffff" opacity="0.9"/>
+    </g>
+  </g>
+</svg>
+

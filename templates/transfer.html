@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+
+{% block content %}
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
+<div class="container py-4">
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-6">
+            <h2 class="fw-bold"><i class="fas fa-paper-plane text-primary me-2"></i>NEXO Pay</h2>
+            <p class="text-muted">Send money instantly via Card Number or QR Code.</p>
+        </div>
+        <div class="col-md-6 text-md-end">
+            <button class="btn btn-outline-primary fw-bold me-2" data-bs-toggle="modal" data-bs-target="#receiveModal" onclick="generateMyQR()">
+                <i class="fas fa-qrcode me-2"></i> Receive (My QR)
+            </button>
+        </div>
+    </div>
+
+    <form method="POST" action="{{ url_for('transfer') }}" id="transferForm">
+        <div class="row g-4">
+            
+            <div class="col-lg-5">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body p-4">
+                        <label class="form-label fw-bold text-secondary small">PAY FROM</label>
+                        <select name="sender_card" id="senderCardSelect" class="form-select form-select-lg mb-3" onchange="updateUI()">
+                            {% for card in cards %}
+                            <option value="{{ card.card_number }}" 
+                                    data-balance="{{ card.balance }}" 
+                                    data-limit="{{ card.expense_limit }}"
+                                    data-currency="{{ card.currency }}">
+                                {{ card.card_type }} ****{{ card.card_number[-4:] }}
+                            </option>
+                            {% endfor %}
+                        </select>
+
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Available:</span>
+                            <span class="fw-bold text-dark" id="balDisplay">0.00</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span class="text-muted">Limit:</span>
+                            <span class="fw-bold text-dark" id="limitTotalDisplay">0.00</span>
+                        </div>
+                        <hr>
+                        <div class="mt-4">
+                            <label class="form-label fw-bold">Enter PIN</label>
+                            <input type="password" name="pin" class="form-control form-control-lg" placeholder="****" maxlength="4" required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-7">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body p-4">
+                        <label class="form-label fw-bold text-secondary small">RECIPIENT</label>
+                        
+                        <div class="input-group mb-4">
+                            <input type="text" id="receiverInput" name="receiver_card" class="form-control form-control-lg" placeholder="Card Number" required>
+                            <button type="button" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#scanModal">
+                                <i class="fas fa-camera me-2"></i>Scan QR
+                            </button>
+                        </div>
+
+                        <label class="form-label fw-bold text-secondary small">AMOUNT</label>
+                        <div class="input-group input-group-lg mb-2">
+                            <input type="number" id="amountInput" name="amount" class="form-control fw-bold" placeholder="0.00" step="0.01" onkeyup="updateUI()" onchange="updateUI()" required>
+                            <span class="input-group-text fw-bold" id="currencyLabel">AZN</span>
+                        </div>
+
+                        <div id="feeAlert" class="alert alert-warning d-none mt-3">
+                            <div class="d-flex justify-content-between">
+                                <span><i class="fas fa-info-circle me-2"></i> Fee (Excess > 5000):</span>
+                                <span class="fw-bold" id="feeDisplay">0.00</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-light rounded p-3 mt-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="fw-bold h5 mb-0">Total Deduction:</span>
+                                <span class="fw-bold h4 text-primary mb-0" id="summaryTotal">0.00</span>
+                            </div>
+                        </div>
+
+                        <button type="submit" id="submitBtn" class="btn btn-primary btn-lg w-100 mt-4 fw-bold">
+                            Confirm Transfer <i class="fas fa-arrow-right ms-2"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="modal fade" id="scanModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title"><i class="fas fa-camera me-2"></i>Scan Receiver QR</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" onclick="stopScanner()"></button>
+            </div>
+            <div class="modal-body text-center p-0">
+                <div id="reader" style="width: 100%;"></div>
+                <p class="text-muted mt-3 small p-2">Point your camera at a valid NEXO Card QR Code</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="receiveModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="fas fa-qrcode me-2"></i>Receive Money</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <p class="text-muted">Scan this code to send money to me</p>
+                <div class="border p-3 d-inline-block rounded bg-white shadow-sm">
+                    <img id="myQrImage" src="" alt="QR Code" class="img-fluid" style="width: 200px; height: 200px;">
+                </div>
+                <h5 class="mt-3 fw-bold text-primary" id="myCardNumDisplay">----</h5>
+                
+                <div class="mt-3">
+                    <label class="small fw-bold text-secondary">Select Wallet to Receive:</label>
+                    <select id="receiveCardSelector" class="form-select mt-1" onchange="generateMyQR()">
+                        {% for card in cards %}
+                        <option value="{{ card.card_number }}">{{ card.card_type }} ({{ card.currency }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- 1. EXISTING TRANSFER LOGIC ---
+    document.addEventListener("DOMContentLoaded", function() { updateUI(); });
+
+    function updateUI() {
+        const select = document.getElementById('senderCardSelect');
+        const amountInput = document.getElementById('amountInput');
+        const selectedOption = select.options[select.selectedIndex];
+        
+        const cardLimit = parseFloat(selectedOption.getAttribute('data-limit')) || 0;
+        const cardBal = parseFloat(selectedOption.getAttribute('data-balance')) || 0;
+        const curr = selectedOption.getAttribute('data-currency') || 'AZN';
+        
+        let amount = parseFloat(amountInput.value);
+        if(isNaN(amount) || amount < 0) amount = 0;
+
+        // Fee Calculation
+        let fee = 0;
+        if (amount > 5000) {
+            let excess = amount - 5000;
+            fee = Math.max(excess * 0.02, 1.0);
+            document.getElementById('feeDisplay').innerText = `+${fee.toFixed(2)} ${curr}`;
+            document.getElementById('feeAlert').classList.remove('d-none');
+        } else {
+            document.getElementById('feeAlert').classList.add('d-none');
+        }
+
+        let total = amount + fee;
+
+        // Labels
+        document.getElementById('balDisplay').innerText = `${cardBal.toFixed(2)} ${curr}`;
+        document.getElementById('limitTotalDisplay').innerText = `${cardLimit.toFixed(2)} ${curr}`;
+        document.getElementById('currencyLabel').innerText = curr;
+        document.getElementById('summaryTotal').innerText = `${total.toFixed(2)} ${curr}`;
+    }
+
+    // --- 2. QR RECEIVE LOGIC ---
+    function generateMyQR() {
+        const selector = document.getElementById('receiveCardSelector');
+        const cardNum = selector.value;
+        const img = document.getElementById('myQrImage');
+        const numDisplay = document.getElementById('myCardNumDisplay');
+        
+        // Call backend to generate image
+        img.src = "/generate_qr/" + cardNum;
+        
+        // Show formatted number
+        numDisplay.innerText = cardNum.match(/.{1,4}/g).join(' ');
+    }
+
+    // --- 3. QR SCANNER LOGIC ---
+    let html5QrcodeScanner = null;
+
+    // Triggered when Scan Modal opens
+    const scanModal = document.getElementById('scanModal');
+    scanModal.addEventListener('shown.bs.modal', function () {
+        startScanner();
+    });
+
+    // Triggered when Scan Modal closes
+    scanModal.addEventListener('hidden.bs.modal', function () {
+        stopScanner();
+    });
+
+    function startScanner() {
+        html5QrcodeScanner = new Html5Qrcode("reader");
+        const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+        
+        html5QrcodeScanner.start(
+            { facingMode: "environment" }, // Use back camera
+            config,
+            onScanSuccess
+        ).catch(err => {
+            console.log("Camera Error: ", err);
+            document.getElementById('reader').innerHTML = "<div class='alert alert-danger'>Camera access denied or error.</div>";
+        });
+    }
+
+    function stopScanner() {
+        if (html5QrcodeScanner) {
+            html5QrcodeScanner.stop().then(() => {
+                html5QrcodeScanner.clear();
+            }).catch(err => console.log(err));
+        }
+    }
+
+    function onScanSuccess(decodedText, decodedResult) {
+        // 1. Play a beep sound (Optional)
+        // 2. Fill the input
+        document.getElementById('receiverInput').value = decodedText;
+        
+        // 3. Stop scanner and close modal
+        stopScanner();
+        const modalEl = document.getElementById('scanModal');
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        modal.hide();
+        
+        // 4. Flash success message
+        alert("QR Scanned Successfully! Card: " + decodedText);
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="card shadow-lg border-0" style="max-width: 500px; width: 100%;">
+        <div class="card-header bg-primary text-white text-center py-4">
+            <i class="fas fa-wallet fa-3x mb-2"></i>
+            <h3 class="fw-bold m-0">Top Up Wallet</h3>
+            <small class="opacity-75">Add funds instantly to your account</small>
+        </div>
+        
+        <div class="card-body p-5">
+            <form method="POST" action="{{ url_for('topup') }}">
+                
+                <div class="mb-4">
+                    <label class="form-label fw-bold text-secondary">Select Card to Charge</label>
+                    <select name="card_num" class="form-select form-select-lg" required>
+                        {% for card in cards %}
+                        <option value="{{ card.card_number }}">
+                            {{ card.card_type }} ending in ****{{ card.card_number[-4:] }} ({{ card.currency }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold text-secondary">Amount</label>
+                    <div class="input-group input-group-lg mb-2">
+                        <span class="input-group-text">$</span>
+                        <input type="number" id="amountInput" name="amount" class="form-control fw-bold" placeholder="0.00" step="0.01" min="1" required>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between gap-2">
+                        <button type="button" class="btn btn-outline-secondary flex-fill" onclick="setAmount(10)">+10</button>
+                        <button type="button" class="btn btn-outline-secondary flex-fill" onclick="setAmount(50)">+50</button>
+                        <button type="button" class="btn btn-outline-secondary flex-fill" onclick="setAmount(100)">+100</button>
+                        <button type="button" class="btn btn-outline-secondary flex-fill" onclick="setAmount(500)">+500</button>
+                    </div>
+                </div>
+
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary btn-lg py-3 fw-bold">
+                        Confirm Top Up <i class="fas fa-arrow-right ms-2"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+        <div class="card-footer text-center bg-light py-3">
+            <small class="text-muted"><i class="fas fa-lock"></i> Secured by 256-bit Encryption</small>
+        </div>
+    </div>
+</div>
+
+<script>
+    function setAmount(val) {
+        document.getElementById('amountInput').value = val;
+    }
+</script>
+{% endblock %}

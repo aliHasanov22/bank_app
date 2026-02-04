@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2 class="fw-bold"><i class="fas fa-gift text-warning"></i> Cashback & Bonuses</h2>
+        <p class="text-muted">Track your monthly cashback earnings. You earn <strong>1%</strong> on every transfer!</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <div class="card bg-dark text-white p-3 shadow-sm">
+            <small class="text-uppercase opacity-75">Monthly Cap</small>
+            <h4 class="mb-0">10.00 <small class="fs-6">per currency</small></h4>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    {% for b in bonuses %}
+    {% set percent = (b['earned_this_month'] / 10.0) * 100 %}
+    {% set color_var = '#007bff' %}
+    {% if b['currency'] == 'USD' %}{% set color_var = '#28a745' %}{% endif %}
+    {% if b['currency'] == 'EUR' %}{% set color_var = '#ffc107' %}{% endif %}
+    
+    <div class="col-md-4 mb-4">
+        <div class="card bonus-card shadow-sm h-100">
+            <div class="card-header bg-white border-0 pt-4 text-center">
+                <h5 class="fw-bold text-secondary">{{ b['currency'] }} Wallet</h5>
+            </div>
+            
+            <div class="card-body text-center">
+                <div class="progress-ring-container mb-3" 
+                     style="background: conic-gradient({{ color_var }} {{ percent }}%, #f0f2f5 0deg);">
+                    <div class="progress-ring-inner">
+                        <span class="text-muted small">Pending</span>
+                        <h3 class="fw-bold mb-0">{{ "%.2f"|format(b['balance']) }}</h3>
+                        <small>{{ b['currency'] }}</small>
+                    </div>
+                </div>
+
+                <div class="row text-center mt-3">
+                    <div class="col-6 border-end">
+                        <small class="text-muted d-block" style="font-size: 0.75rem;">Earned this Month</small>
+                        <strong class="text-dark">{{ "%.2f"|format(b['earned_this_month']) }}</strong>
+                    </div>
+                    <div class="col-6">
+                        <small class="text-muted d-block" style="font-size: 0.75rem;">Remaining Cap</small>
+                        <strong class="text-secondary">{{ "%.2f"|format(10.0 - b['earned_this_month']) }}</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-footer bg-white border-0 pb-4 px-4">
+                {% if b['balance'] >= 1.0 %}
+                <a href="{{ url_for('claim_bonus', currency=b['currency']) }}" class="btn btn-success w-100 shadow-sm">
+                    <i class="fas fa-check-circle me-1"></i> Claim to Wallet
+                </a>
+                {% else %}
+                <button class="btn btn-light text-muted w-100" disabled>
+                    Min 1.00 to Claim
+                </button>
+                <div class="progress mt-2" style="height: 4px;">
+                    <div class="progress-bar bg-warning" role="progressbar" style="width: {{ (b['balance'] / 1.0) * 100 }}%"></div>
+                </div>
+                <small class="text-muted d-block text-center mt-1" style="font-size: 0.7rem;">
+                    {{ "%.2f"|format(b['balance']) }} / 1.00 needed
+                </small>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12">
+        <div class="alert alert-info text-center py-5">
+            <i class="fas fa-search-dollar fa-3x mb-3"></i>
+            <h4>No Bonus History Yet</h4>
+            <p>Make a transfer to another user to start earning 1% cashback instantly!</p>
+            <a href="{{ url_for('transfer') }}" class="btn btn-primary mt-2">Make a Transfer</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm bg-primary text-white">
+            <div class="card-body p-4 d-flex align-items-center justify-content-between">
+                <div>
+                    <h4><i class="fas fa-info-circle me-2"></i> How it works</h4>
+                    <ul class="mb-0 ps-3">
+                        <li>Send money to friends and earn <strong>1% cashback</strong> instantly.</li>
+                        <li>Cashback accumulates in your Bonus Balance.</li>
+                        <li>Once you reach <strong>1.00</strong>, you can claim it to your main wallet.</li>
+                        <li>Maximum earnings per month: <strong>10.00</strong> per currency.</li>
+                    </ul>
+                </div>
+                <i class="fas fa-coins fa-5x opacity-25 d-none d-md-block"></i>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

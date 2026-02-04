@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+{% block content %}
+<a href="{{ url_for('cards') }}" class="btn btn-outline-secondary mb-3">&larr; Back to Cards</a>
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3">
+    <div>
+        <h2 class="mb-1">Manage your card</h2>
+        <p class="text-muted mb-0">Card ending {{ card['card_number'][-4:] }} • {{ card['currency'] }}</p>
+    </div>
+    <div class="mt-2 mt-md-0">
+        <span class="badge rounded-pill {% if card['status'] == 'ACTIVE' %}bg-success{% elif card['status'] == 'BLOCKED' %}bg-danger{% else %}bg-warning text-dark{% endif %}">
+            {{ card['status']|capitalize }}
+        </span>
+    </div>
+</div>
+
+{% if card['status'] == 'PENDING' %}
+<div class="alert alert-warning" role="alert">
+    This card is pending approval. You can view details now, and settings will unlock after activation.
+</div>
+{% else %}
+
+<div class="row mt-4 g-3">
+    <div class="col-md-6 mb-3">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">Card name</h5>
+                <p class="text-muted small">Give this card a nickname so it is easy to recognize in transfers and statements.</p>
+            <form method="POST">
+                <input type="hidden" name="action" value="rename">
+                <label class="form-label" for="new-name">Card name</label>
+                <input type="text" id="new-name" name="new_name" class="form-control mb-2" value="{{ card['card_name'] }}" maxlength="30" required>
+                <div class="form-text">Up to 30 characters. This does not affect your physical card.</div>
+                <button class="btn btn-primary mt-3">Save name</button>
+            </form>
+            </div>
+        </div>
+    </div>
+
+        <div class="col-md-6 mb-3">
+  <div class="card h-100 shadow-sm">
+    <div class="card-body">
+      <h5 class="card-title">Change PIN</h5>
+      <p class="text-muted small mb-3">
+        Choose a 4-digit PIN. Don’t use birthdays or 0000/1234.
+      </p>
+
+      <form method="POST" id="pinForm">
+        <input type="hidden" name="action" value="change_pin">
+
+        <label class="form-label" for="new-pin">New PIN</label>
+        <div class="input-group mb-2">
+          <input type="password"
+                 id="new-pin"
+                 name="new_pin"
+                 class="form-control"
+                 maxlength="4"
+                 inputmode="numeric"
+                 pattern="[0-9]{4}"
+                 autocomplete="new-password"
+                 placeholder="4 digits"
+                 required>
+          <button class="btn btn-outline-secondary" type="button" id="toggleNewPin" aria-label="Show PIN">
+            <i class="fas fa-eye"></i>
+          </button>
+        </div>
+
+        <label class="form-label mt-2" for="confirm-pin">Confirm new PIN</label>
+        <div class="input-group">
+          <input type="password"
+                 id="confirm-pin"
+                 name="confirm_pin"
+                 class="form-control"
+                 maxlength="4"
+                 inputmode="numeric"
+                 pattern="[0-9]{4}"
+                 autocomplete="new-password"
+                 placeholder="Repeat PIN"
+                 required>
+          <button class="btn btn-outline-secondary" type="button" id="toggleConfirmPin" aria-label="Show PIN">
+            <i class="fas fa-eye"></i>
+          </button>
+        </div>
+
+        <!-- Inline feedback (better UX than default browser message) -->
+        <div id="pinHelp" class="form-text mt-2">
+          Exactly 4 digits (0–9). You’ll use this for ATM withdrawals.
+        </div>
+        <div id="pinError" class="text-danger small mt-2 d-none"></div>
+
+        <button class="btn btn-warning mt-3 w-100" id="pinSubmitBtn">
+          <i class="fas fa-key me-1"></i> Update PIN
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+    <div class="col-md-6 mb-3">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">Spending limit</h5>
+                <p class="text-muted small">Set a monthly limit to help keep your spending in check.</p>
+            <form method="POST">
+                <input type="hidden" name="action" value="change_limit">
+                <label class="form-label" for="new-limit">New monthly limit</label>
+                <div class="input-group mb-2">
+                    <span class="input-group-text">{{ card['currency'] }}</span>
+                    <input type="number" id="new-limit" name="new_limit" class="form-control" min="0" step="100" inputmode="numeric" placeholder="{{ card['expense_limit'] }}" required>
+                </div>
+                <div class="form-text">Current limit: {{ card['expense_limit'] }} {{ card['currency'] }}.</div>
+                <button class="btn btn-info text-white mt-3">Save limit</button>
+            </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 mb-3">
+  <div class="card h-100 border-danger shadow-sm">
+    <div class="card-body">
+      <h5 class="card-title text-danger">Freeze card</h5>
+      <p class="text-muted small">
+        Freezing instantly stops purchases and withdrawals. You can unfreeze anytime.
+      </p>
+
+      <div class="d-flex align-items-center gap-2 mb-3">
+        <span class="badge {% if card['status'] == 'BLOCKED' %}bg-danger{% else %}bg-success{% endif %}">
+          {% if card['status'] == 'BLOCKED' %}Frozen{% else %}Active{% endif %}
+        </span>
+        <span class="small text-muted">
+          Transactions are {% if card['status'] == 'BLOCKED' %}blocked{% else %}allowed{% endif %}.
+        </span>
+      </div>
+
+      <form method="POST" id="freezeForm">
+        <input type="hidden" name="action" value="toggle_block">
+
+        {% if card['status'] == 'BLOCKED' %}
+          <button class="btn btn-success w-100" id="freezeBtn">
+            <i class="fas fa-unlock me-1"></i> Unfreeze card
+          </button>
+        {% else %}
+          <!-- Trigger modal -->
+          <button type="button" class="btn btn-danger w-100" data-bs-toggle="modal" data-bs-target="#freezeModal">
+            <i class="fas fa-snowflake me-1"></i> Freeze card
+          </button>
+
+          <!-- Modal -->
+          <div class="modal fade" id="freezeModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title">Freeze this card?</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                  This will block all purchases and ATM withdrawals immediately.
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                  <button type="submit" class="btn btn-danger" id="freezeBtn">
+                    Yes, freeze it
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+      </form>
+    </div>
+  </div>
+</div>
+<script>
+  // ----- PIN show/hide -----
+  function togglePin(inputId, btnId) {
+    const input = document.getElementById(inputId);
+    const btn = document.getElementById(btnId);
+    if (!input || !btn) return;
+
+    btn.addEventListener('click', () => {
+      const show = input.type === 'password';
+      input.type = show ? 'text' : 'password';
+      const icon = btn.querySelector('i');
+      if (icon) icon.className = show ? 'fas fa-eye-slash' : 'fas fa-eye';
+      btn.setAttribute('aria-label', show ? 'Hide PIN' : 'Show PIN');
+    });
+  }
+  togglePin('new-pin', 'toggleNewPin');
+  togglePin('confirm-pin', 'toggleConfirmPin');
+
+  // ----- PIN inline validation -----
+  const pinForm = document.getElementById('pinForm');
+  const pinInput = document.getElementById('new-pin');
+  const confirmPinInput = document.getElementById('confirm-pin');
+  const pinError = document.getElementById('pinError');
+  const pinSubmitBtn = document.getElementById('pinSubmitBtn');
+
+  function showError(msg) {
+    if (!pinError) return;
+    pinError.textContent = msg;
+    pinError.classList.remove('d-none');
+  }
+  function clearError() {
+    if (!pinError) return;
+    pinError.textContent = '';
+    pinError.classList.add('d-none');
+  }
+
+  function validatePin() {
+    clearError();
+    if (!pinInput || !confirmPinInput) return true;
+
+    const a = pinInput.value.trim();
+    const b = confirmPinInput.value.trim();
+
+    if ((a && (a.length !== 4 || !/^\d{4}$/.test(a))) || (b && (b.length !== 4 || !/^\d{4}$/.test(b)))) {
+      showError("PIN must be exactly 4 digits.");
+      return false;
+    }
+    if (b && a !== b) {
+      showError("PINs do not match.");
+      return false;
+    }
+    return true;
+  }
+
+  if (pinInput && confirmPinInput) {
+    pinInput.addEventListener('input', validatePin);
+    confirmPinInput.addEventListener('input', validatePin);
+  }
+
+  if (pinForm) {
+    pinForm.addEventListener('submit', (e) => {
+      if (!validatePin()) {
+        e.preventDefault();
+        return;
+      }
+      // prevent double submit
+      if (pinSubmitBtn) {
+        pinSubmitBtn.disabled = true;
+        pinSubmitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Updating...';
+      }
+    });
+  }
+
+  // ----- Freeze double submit protection -----
+  const freezeForm = document.getElementById('freezeForm');
+  const freezeBtn = document.getElementById('freezeBtn');
+  if (freezeForm && freezeBtn) {
+    freezeForm.addEventListener('submit', () => {
+      freezeBtn.disabled = true;
+      freezeBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Updating...';
+    });
+  }
+</script>
+{% endif %}
+{% endblock %}

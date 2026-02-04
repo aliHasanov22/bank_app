@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h4>Order New Card</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">Select Currency</label>
+                        <select name="currency" class="form-select">
+                            <option value="AZN">AZN (Azerbaijani Manat)</option>
+                            <option value="USD">USD (US Dollar)</option>
+                            <option value="EUR">EUR (Euro)</option>
+                        </select>
+                        <div class="form-text">The card will be linked to this currency wallet.</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Card Type</label>
+                        <div class="d-flex gap-3">
+                            <div class="form-check border p-3 rounded flex-fill">
+                                <input class="form-check-input" type="radio" name="card_type" value="VISA" id="visa" checked>
+                                <label class="form-check-label w-100" for="visa">
+                                    <i class="fab fa-cc-visa fa-2x text-primary align-middle me-2"></i> Visa
+                                </label>
+                            </div>
+                            <div class="form-check border p-3 rounded flex-fill">
+                                <input class="form-check-input" type="radio" name="card_type" value="MASTERCARD" id="master">
+                                <label class="form-check-label w-100" for="master">
+                                    <i class="fab fa-cc-mastercard fa-2x text-danger align-middle me-2"></i> Mastercard
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary w-100 py-2">Place Order</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

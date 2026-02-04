@@ -1,0 +1,612 @@
+
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEXO Bank Ultimate</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* --- 1. CSS VARIABLES (THEME ENGINE) --- */
+        :root {
+            /* Light Mode (Default) */
+            --bg-body: #f8fafc;
+            --bg-sidebar: #0f172a;       /* Always Dark Sidebar for contrast */
+            --bg-card: #ffffff;
+            --bg-elevated: #f1f5f9;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --sidebar-width: 280px;
+            --header-height: 70px;
+            --sidebar-text: #cbd5e1;
+            --sidebar-text-active: #ffffff;
+            --sidebar-bg-active: rgba(255, 255, 255, 0.1);
+            --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -1px rgb(0 0 0 / 0.06);
+            color-scheme: light;
+        }
+
+        [data-theme="dark"] {
+            /* Dark Mode Overrides */
+            --bg-body: #020617;
+            --bg-card: #1e293b;
+            --bg-elevated: #0f172a;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            --shadow-sm: none;
+            --shadow-md: 0 10px 15px -3px rgb(0 0 0 / 0.5);
+            color-scheme: dark;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            font-family: 'Inter', sans-serif;
+            color: var(--text-main);
+            transition: background-color 0.3s ease, color 0.3s ease;
+            overflow-x: hidden;
+        }
+
+        /* --- 2. SIDEBAR STYLING --- */
+        .sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            background-color: var(--bg-sidebar);
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1050;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease-in-out;
+            border-right: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .brand-logo {
+            height: var(--header-height);
+            display: flex;
+            align-items: center;
+            padding: 0 25px;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: white;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .nav-container {
+            flex-grow: 1;
+            padding: 20px 15px;
+            overflow-y: auto;
+        }
+
+        /* FIX: High Contrast Category Headers */
+        .sidebar-category {
+            color: #64748b; /* Lighter grey for visibility */
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 25px 0 10px 15px; /* Spacing */
+            display: block;
+        }
+        
+        .sidebar-category:first-child { margin-top: 0; }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            color: var(--sidebar-text);
+            padding: 12px 15px;
+            border-radius: 10px;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            margin-bottom: 4px;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .nav-link i {
+            width: 24px;
+            text-align: center;
+            margin-right: 12px;
+            font-size: 1.1rem;
+            transition: transform 0.2s;
+        }
+
+        .nav-link:hover {
+            color: white;
+            background-color: rgba(255,255,255,0.05);
+            transform: translateX(4px);
+        }
+        
+        .nav-link:hover i { transform: scale(1.1); }
+
+        .nav-link.active {
+            background-color: var(--primary);
+            color: white;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+
+        /* User Profile in Sidebar */
+        .sidebar-footer {
+            padding: 20px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            background: rgba(0,0,0,0.2);
+        }
+
+        /* --- 3. MAIN WRAPPER --- */
+        .main-wrapper {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: margin-left 0.3s ease-in-out;
+        }
+
+        /* --- 4. TOP HEADER (Glassmorphism) --- */
+        .top-header {
+            height: var(--header-height);
+            background-color: var(--bg-card); /* Changes with theme */
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            position: sticky;
+            top: 0;
+            z-index: 1040;
+            border-bottom: 1px solid var(--border-color);
+            transition: background-color 0.3s ease;
+        }
+
+        .header-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin: 0;
+        }
+
+        /* Theme Toggle Button */
+        .theme-btn {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .theme-btn:hover { background-color: var(--border-color); transform: rotate(15deg); }
+
+        /* Mobile Toggle */
+        .mobile-toggle {
+            display: none; /* Hidden on Desktop */
+            background: none;
+            border: none;
+            color: var(--text-main);
+            font-size: 1.5rem;
+            margin-right: 15px;
+        }
+
+        /* --- 5. CONTENT AREA --- */
+        .content-body {
+            padding: 30px;
+            flex-grow: 1;
+        }
+
+        /* --- 6. GLOBAL CARD & UI STYLES --- */
+        .card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
+            border-radius: 16px;
+            color: var(--text-main);
+        }
+
+        .list-group-item {
+            background-color: var(--bg-card);
+            border-color: var(--border-color);
+            color: var(--text-main);
+        }
+        
+        .form-control, .form-select {
+            background-color: var(--bg-body);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 12px;
+            border-radius: 12px;
+        }
+
+        .input-group-text {
+            background-color: var(--bg-elevated);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+        }
+
+        .table {
+            color: var(--text-main);
+        }
+
+        .table thead th {
+            border-color: var(--border-color);
+            color: var(--text-muted);
+        }
+
+        .table tbody td {
+            border-color: var(--border-color);
+        }
+
+        .dropdown-menu {
+            background-color: var(--bg-card);
+            border-color: var(--border-color);
+            color: var(--text-main);
+        }
+
+        .dropdown-item {
+            color: var(--text-main);
+        }
+
+        .dropdown-item:hover,
+        .dropdown-item:focus {
+            background-color: var(--bg-elevated);
+        }
+
+        .modal-content {
+            background-color: var(--bg-card);
+            border-color: var(--border-color);
+            color: var(--text-main);
+        }
+
+        .alert {
+            border-color: var(--border-color);
+            background-color: var(--bg-elevated);
+            color: var(--text-main);
+        }
+
+        .alert .btn-close {
+            filter: invert(0);
+        }
+
+        [data-theme="dark"] .alert .btn-close {
+            filter: invert(1);
+        }
+        
+        .form-control:focus, .form-select:focus {
+            background-color: var(--bg-card);
+            border-color: var(--primary);
+            color: var(--text-main);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        }
+
+        /* Bonus Rings (Preserved Logic) */
+        .progress-ring-container {
+            position: relative; width: 140px; height: 140px; margin: 0 auto; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            background: var(--bg-card); /* Fix for dark mode ring bg */
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.1);
+        }
+        .progress-ring-inner {
+            width: 110px; height: 110px; background-color: var(--bg-card); 
+            border-radius: 50%; display: flex; flex-direction: column; 
+            align-items: center; justify-content: center;
+            color: var(--text-main);
+            z-index: 2;
+        }
+        .ring-AZN { color: #3b82f6; }
+        .ring-USD { color: #10b981; }
+        .ring-EUR { color: #f59e0b; }
+
+        /* ===============================
+           BANK CARD (PREMIUM UI)
+        ================================ */
+
+        .bank-card{
+            position: relative;
+            overflow: hidden;
+            border-radius: 20px;
+            padding: 20px;
+            min-height: 230px;
+            color: #fff;
+            box-shadow: var(--shadow-md);
+            transition: transform .25s ease, filter .25s ease;
+        }
+
+        .bank-card:hover{
+            transform: translateY(-4px);
+        }
+
+        /* Soft light reflections */
+        .bank-card::before{
+            content:"";
+            position:absolute;
+            inset:0;
+            background:
+                radial-gradient(circle at 15% 20%, rgba(255,255,255,.18), transparent 45%),
+                radial-gradient(circle at 85% 85%, rgba(255,255,255,.10), transparent 55%);
+            pointer-events:none;
+            }
+
+        /* VISA & MASTERCARD THEMES */
+        .bg-gradient-visa{
+            background: linear-gradient(135deg, #1e3a8a, #2563eb);
+        }
+
+        .bg-gradient-master{
+            background: linear-gradient(135deg, #7c2d12, #ea580c);
+        }
+
+        /* Chip */
+        .card-chip{
+            width: 44px;
+            height: 34px;
+            border-radius: 6px;
+            background: linear-gradient(135deg, #facc15, #ca8a04);
+            margin-bottom: 10px;
+        }
+
+        /* Card text */
+        .card-number{
+            letter-spacing: 2px;
+            font-weight: 600;
+        }
+
+        .card-balance{
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        /* ===============================
+           BANK LOGO WATERMARK
+        ================================ */
+
+        .bank-watermark{
+            position: absolute;
+            right: -20px;
+            bottom: -20px;
+            width: 180px;
+            opacity: 0.12;
+            pointer-events: none;
+            user-select: none;
+            z-index: 1;
+        }
+        .bank-watermark-center{
+            left: 50%;
+            top: 50%;
+            right: auto;
+            bottom: auto;
+            transform: translate(-50%, -50%);
+            width: 210px;
+            opacity: 0.10;
+        }
+
+/* Eye button readability on gradients */
+        .card-eye-btn{
+            border: none;
+            box-shadow: var(--shadow-sm);
+        }
+        .card-eye-btn:hover{
+            transform: translateY(-1px);
+        }
+
+        /* ===============================
+           FROZEN / BLOCKED CARD
+        ================================ */
+
+        .bank-card.is-frozen{
+            filter: grayscale(.6);
+        }
+
+        /* Overlay */
+        .frozen-overlay{
+            position:absolute;
+            inset:0;
+            display:flex;
+            flex-direction:column;
+            justify-content:center;
+            align-items:center;
+            text-align:center;
+            background: rgba(0,0,0,.4);
+            backdrop-filter: blur(2px);
+            z-index:5;
+        }
+
+        /* Badge */
+        .frozen-badge{
+            display:flex;
+            align-items:center;
+            gap:10px;
+            padding:10px 18px;
+            border-radius:999px;
+            background: rgba(255,255,255,.15);
+            border:1px solid rgba(255,255,255,.25);
+            font-weight:700;
+            text-transform:uppercase;
+            letter-spacing:.6px;
+        }
+
+
+        /* --- 7. MOBILE RESPONSIVENESS --- */
+        @media (max-width: 992px) {
+            .sidebar { transform: translateX(-100%); } /* Hide Sidebar */
+            .main-wrapper { margin-left: 0; }
+            .mobile-toggle { display: block; } /* Show Hamburger */
+            
+            /* Class to show sidebar on mobile */
+            body.sidebar-open .sidebar { transform: translateX(0); }
+            
+            /* Overlay when sidebar is open */
+            body.sidebar-open::after {
+                content: '';
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0,0,0,0.5); z-index: 1045;
+                backdrop-filter: blur(2px);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    {% if session.user_id and not session.is_admin %}
+    <nav class="sidebar" id="sidebar">
+        <div class="brand-logo">
+            <i class="fas fa-university text-primary me-2"></i> NEXO
+        </div>
+        
+        <div class="nav-container">
+            <span class="sidebar-category">Main Menu</span>
+            
+            <a href="{{ url_for('dashboard') }}" class="nav-link {{ 'active' if request.endpoint == 'dashboard' else '' }}">
+                <i class="fas fa-th-large"></i> Dashboard
+            </a>
+            <a href="{{ url_for('cards') }}" class="nav-link {{ 'active' if 'cards' in request.endpoint or 'order' in request.endpoint else '' }}">
+                <i class="fas fa-credit-card"></i> Cards
+            </a>
+            <a href="{{ url_for('transfer') }}" class="nav-link {{ 'active' if request.endpoint == 'transfer' else '' }}">
+                <i class="fas fa-paper-plane"></i> Transfer
+            </a>
+            <a href="{{ url_for('exchange') }}" class="nav-link {{ 'active' if request.endpoint == 'exchange' else '' }}">
+                <i class="fas fa-sync-alt"></i> Exchange
+            </a>
+            <a href="{{ url_for('bonuses') }}" class="nav-link {{ 'active' if request.endpoint == 'bonuses' else '' }}">
+                <i class="fas fa-gift"></i> Rewards
+            </a>
+            
+            <span class="sidebar-category mt-4">Settings</span>
+            
+            <a href="{{ url_for('history') }}" class="nav-link {{ 'active' if request.endpoint == 'history' else '' }}">
+                <i class="fas fa-history"></i> History
+            </a>
+            <a href="{{ url_for('support') }}" class="nav-link {{ 'active' if request.endpoint == 'support' else '' }}">
+                <i class="fas fa-headset"></i> Support
+            </a>
+             <a href="{{ url_for('profile') }}" class="nav-link {{ 'active' if request.endpoint == 'profile' else '' }}">
+                <i class="fas fa-user-cog"></i> Profile
+            </a>
+        </div>
+
+        <div class="sidebar-footer">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center text-white fw-bold me-2" style="width: 38px; height: 38px;">
+                        {{ session.get('name', 'U')[0] }}
+                    </div>
+                    <div style="line-height: 1.2;">
+                        <small class="d-block text-white fw-bold" style="font-size: 0.85rem;">{{ session.get('name', 'User') }}</small>
+                        <small class="text-white-50" style="font-size: 0.7rem;">ID: {{ session.user_id }}</small>
+                    </div>
+                </div>
+                <a href="{{ url_for('logout') }}" class="text-danger p-2" title="Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                </a>
+            </div>
+        </div>
+    </nav>
+    {% endif %}
+
+    <div class="main-wrapper" style="{{ 'margin-left: 0;' if not session.user_id or session.is_admin else '' }}">
+        
+        {% if session.user_id and not session.is_admin %}
+        <header class="top-header">
+            <div class="d-flex align-items-center">
+                <button class="mobile-toggle" onclick="toggleSidebar()">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h2 class="header-title">
+                    {% if request.endpoint == 'dashboard' %} Overview
+                    {% elif request.endpoint == 'cards' %} My Cards
+                    {% elif request.endpoint == 'transfer' %} Money Transfer
+                    {% elif request.endpoint == 'bonuses' %} Rewards Center
+                    {% elif request.endpoint == 'history' %} Transactions
+                    {% elif request.endpoint == 'profile' %} Account Settings
+                    {% else %} NEXO Bank {% endif %}
+                </h2>
+            </div>
+            
+            <div class="d-flex align-items-center gap-3">
+                <button class="theme-btn" onclick="toggleTheme()" title="Switch Theme">
+                    <i class="fas fa-moon" id="themeIcon"></i>
+                </button>
+                
+                <a href="{{ url_for('topup') }}" class="btn btn-primary d-flex align-items-center gap-2 px-3 rounded-pill fw-bold shadow-sm">
+                    <i class="fas fa-plus"></i> <span class="d-none d-sm-inline">Top Up</span>
+                </a>
+            </div>
+        </header>
+        {% endif %}
+
+        <div class="content-body">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm border-0 rounded-3 mb-4" role="alert">
+                            <i class="fas fa-info-circle me-2"></i> {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 1. Theme Logic
+        const html = document.documentElement;
+        const themeIcon = document.getElementById('themeIcon');
+        
+        const storedTheme = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+        if ((storedTheme === 'dark') || (!storedTheme && prefersDark)) {
+            html.setAttribute('data-theme', 'dark');
+            if(themeIcon) themeIcon.className = 'fas fa-sun';
+        }
+
+        function toggleTheme() {
+            const current = html.getAttribute('data-theme');
+            if (current === 'dark') {
+                html.setAttribute('data-theme', 'light');
+                localStorage.setItem('theme', 'light');
+                themeIcon.className = 'fas fa-moon';
+            } else {
+                html.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+                themeIcon.className = 'fas fa-sun';
+            }
+        }
+
+        // 2. Sidebar Logic (Mobile)
+        function toggleSidebar() {
+            document.body.classList.toggle('sidebar-open');
+        }
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(event) {
+            const sidebar = document.getElementById('sidebar');
+            const toggle = document.querySelector('.mobile-toggle');
+            if (document.body.classList.contains('sidebar-open') && 
+                sidebar && 
+                !sidebar.contains(event.target) && 
+                !toggle.contains(event.target)) {
+                document.body.classList.remove('sidebar-open');
+            }
+        });
+    </script>
+</body>
+</html>
+
+
